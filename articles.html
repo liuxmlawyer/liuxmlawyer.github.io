@@ -22,20 +22,7 @@
     <div class="container main-wrap">
         <main class="content">
             <h2>全部文章</h2>
-            <article class="post-item">
-                <h2 class="post-title"><a href="post.html">企业加班费核算实务要点</a></h2>
-                <div class="post-meta">2026年09月16日 | 作者：刘律 | 分类：用工合规 | 浏览：130</div>
-                <div class="post-excerpt">
-                    <p>加班费是劳动争议高频案由，很多中小企业在基数认定、计算方式上容易踩坑。</p>
-                </div>
-            </article>
-            <article class="post-item">
-                <h2 class="post-title"><a href="post.html">AI训练数据来源合法性边界</a></h2>
-                <div class="post-meta">2026年09月10日 | 作者：刘律 | 分类：AI合规 | 浏览：218</div>
-                <div class="post-excerpt">
-                    <p>如何判断大模型训练素材是否侵权，企业使用AI工具时存在哪些法律风险。</p>
-                </div>
-            </article>
+            <div id="article-list"></div>
         </main>
         <aside class="sidebar">
             <div class="widget">
@@ -67,5 +54,54 @@
         <div class="container">© 2026 刘律大法师的法律博客</div>
     </footer>
     <script src="js/script.js"></script>
+    <script>
+// 读取posts目录md文章列表
+async function loadPosts() {
+  const postsList = [
+    "2026-09-17-labor-dispute.md"
+  ];
+  const posts = [];
+  for (const filename of postsList) {
+    const res = await fetch(`posts/${filename}`);
+    const raw = await res.text();
+    // 简单解析markdown frontmatter
+    const fmMatch = raw.match(/---\n([\s\S]*?)\n---\n([\s\S]*)/);
+    if (!fmMatch) continue;
+    const front = fmMatch[1];
+    const content = fmMatch[2];
+    const post = {};
+    front.split("\n").forEach(line=>{
+      const [k, v] = line.split(": ");
+      if(k && v) post[k.trim()] = v.trim();
+    })
+    post.filename = filename;
+    post.content = content;
+    posts.push(post);
+  }
+  // 按日期倒序
+  posts.sort((a,b)=> new Date(b.date) - new Date(a.date));
+  renderArticleList(posts);
+}
+
+// 渲染文章列表，复用你现有的post-item样式
+function renderArticleList(posts) {
+  const container = document.getElementById("article-list");
+  if(!container) return;
+  container.innerHTML = "";
+  posts.forEach(p=>{
+    const div = document.createElement("article");
+    div.className = "post-item";
+    div.innerHTML = `
+      <h2 class="post-title"><a href="post.html?file=${p.filename}">${p.title}</a></h2>
+      <div class="post-meta">${p.date} | 作者：刘律 | 分类：${p.category}</div>
+      <div class="post-excerpt">
+        <p>${p.summary}</p>
+      </div>
+    `
+    container.appendChild(div);
+  })
+}
+loadPosts();
+</script>
 </body>
 </html>
